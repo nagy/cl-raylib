@@ -5,10 +5,18 @@
          (unwind-protect (progn ,@body)
           (close-window))))
 
+(defparameter *textures-to-unload* nil)
+
 (defmacro with-drawing (&body body)
- `(progn (begin-drawing)
-         (unwind-protect (progn ,@body)
-          (end-drawing))))
+  `(progn (begin-drawing)
+          (unwind-protect
+               (progn
+                 (when *textures-to-unload*
+                   (format t "unloading texture ~S~%" (texture-id (car *textures-to-unload*)))
+                   (force-output)
+                   (unload-texture (pop *textures-to-unload*)))
+                 ,@body)
+            (end-drawing))))
 
 (defmacro with-mode-2d ((camera) &body body)
  `(progn (begin-mode-2d ,camera)
